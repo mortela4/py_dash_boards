@@ -5,6 +5,7 @@
 """
 
 from bokeh.plotting import figure
+from bokeh.document import without_document_lock            # See: https://docs.bokeh.org/en/2.4.2/docs/user_guide/server.html#updating-from-unlocked-callbacks
 from bokeh.models import ColumnDataSource
 from bokeh.models.tools import HoverTool
 from bokeh.models.widgets import Div
@@ -117,6 +118,7 @@ p.yaxis.axis_label = 'Value'
 
 # Create a data source for the line chart
 source = ColumnDataSource(data=dict(time=[0.0], value=[0.0]))
+source.stream(dict(time=[1.0], value=[1.0]))
 
 # Create a line glyph for the line chart
 line = p.line(x='time', y='value', source=source, line_width=2, line_color=Category10[10][0])
@@ -142,9 +144,24 @@ def on_message(client, userdata, msg):
 
 sample_counter = 0
 
+def update_chart(line_data: dict):
+    global source
+    #
+    # Update the dashboard with the new data
+    if source.stream:
+        print("'Source' ready - now add data to stream ...")
+        # TODO:: fix document locking!!
+        source.stream(line_data)   
+        # source.data.update(line_data)   # Same shit ...
+    else:
+        print("WARN: source-stream NOT set up yet!!") 
+
+
+without_document_lock(update_chart)
+
+
 def on_message(client, userdata, msg):
     #
-    global source
     global sample_counter
     #
     if client:
@@ -154,17 +171,12 @@ def on_message(client, userdata, msg):
         pass
     #
     data = msg.payload.decode("utf-8")
-    sinus_val = get_value_from_raw(data)
+    sine_val = get_value_from_raw(data)
     print(f"Received data for sample-count {sample_counter}: {data}")
     #
     sample_counter += 1
-    # Update the dashboard with the new data
-    if source.stream:
-        print("'Source' ready - now add data to stream ...")
-        # TODO:: fix document locking!!
-        source.stream(dict(time=[float(sample_counter)], value=[sinus_val]))    
-    else:
-        print("WARN: source-stream NOT set up yet!!") 
+    #
+    update_chart(dict(time=[float(sample_counter)], value=[sine_val]))
 
 
 # Create a MQTT client and connect to the broker
@@ -177,8 +189,9 @@ def modify_doc(doc):
 
 # Create a Bokeh server and start it
 server = Server({'/': modify_doc}, num_procs=1)     # NOTE: on WinXX, 'num_procs' MUST be =1 !!
-server.start()
 
+server.start()
+    
 # Start the MQTT client loop
 mqtt_client.loop_start()
 
@@ -186,3 +199,4 @@ mqtt_client.loop_start()
 if __name__ == '__main__':
     server.io_loop.add_callback(server.show, '/')
     server.io_loop.start()
+

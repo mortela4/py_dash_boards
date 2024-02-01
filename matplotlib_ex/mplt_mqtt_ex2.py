@@ -21,6 +21,8 @@ topic = "1/testPoints/sinus"
 # Animation:
 UPDATE_INTERVAL_MS = 500    # 500 ms update-interval, i.e. 0.5 sec.
 
+# Debug:
+DATA_STREAM_DEBUG = False
  
 # style.use('fivethirtyeight')      # Optional ...
 
@@ -118,6 +120,7 @@ ax1 = fig.add_subplot(1,1,1)
 xs = []
 ys = []
 sample_counter = 0
+sample_counter_prev = 0
 
 def on_message(client, userdata, msg):
     #
@@ -144,13 +147,20 @@ mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port,
 
 
 def animate(i):
-    global xs, ys
+    global xs, ys, sample_counter, sample_counter_prev
     #
     if 0 != i and 0 == i % 10:
         print(f"Update {i} ...")
     #
-    ax1.clear()
-    ax1.plot(xs, ys)
+    if sample_counter != sample_counter_prev:
+        ax1.clear()
+        ax1.plot(xs, ys)
+        sample_counter_prev = sample_counter
+    else:
+        if DATA_STREAM_DEBUG:
+            print("No new data ...")
+        else:
+            pass
 
 
 _ = animation.FuncAnimation(fig, animate, interval=UPDATE_INTERVAL_MS)    # NOTE: 'animation'-object is NOT used elsewhere, i.e. does NOT need a name!

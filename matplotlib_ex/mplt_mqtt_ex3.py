@@ -1,7 +1,29 @@
 """
-@file mplt_mqtt_ex2.py
+@file mplt_mqtt_ex3.py
 
-@brief Simple MQTT-data stream-plotting w. Matplotlib.
+@brief Graphing ISS position and velocity data w. Matplotlib.
+The position/velocity data is in the following JSON format:
+{
+    "name":"ISS (ZARYA)",
+    "timestamp":1706038908569,
+    "position":
+        {
+            "x":1971162.2089,
+            "y":-5601577.7301,
+            "z":-3317897.1995,
+            "lat":-29.3472,
+            "lon":-128.7091,
+            "alt":429291.3161,
+            "speed":7652.1088,
+            "bearing":42.8144
+        },
+    "velocity":
+        {
+            "x":6000.958871576156,
+            "y":-667.5434490407952,
+            "z":4700.813475006011
+        }
+}
 """
 
 import matplotlib.pyplot as plt
@@ -16,7 +38,7 @@ import json
 # Define the MQTT broker details
 broker_address = "test.mosquitto.org"
 broker_port = 1883
-topic = "1/testPoints/sinus"
+topic = "Satellite/Iss"
 
 # Animation:
 UPDATE_INTERVAL_MS = 500    # 500 ms update-interval, i.e. 0.5 sec.
@@ -27,10 +49,13 @@ DATA_STREAM_DEBUG = False
 # style.use('fivethirtyeight')      # Optional ...
 
 
-# ********************************** Helpers **************************************
+# ********************************** Basic Helpers **************************************
 
-def get_value_from_json(raw_data: str, value_key: str) -> tuple:
-    json_data = json.loads(raw_data)
+def get_value_from_json(raw_data: str|dict, value_key: str) -> tuple:
+    if isinstance(raw_data, str):
+        json_data = json.loads(raw_data)
+    else:
+        json_data = raw_data    # Raw data is already a 'dict' - no need to load from string!
     # Get value:
     try:
         f_val = float(json_data[value_key])
@@ -50,6 +75,55 @@ def get_value_from_raw(raw_data: str) -> tuple:
         f_val = 0.0
     #
     return f_val
+
+
+# ********************************* Data-specific Helpers **************************************
+
+def get_xy_coordinates(raw_data: str) -> tuple:
+    """
+    Get XYZ-coordinates in 'raw' values from MQTT data.
+    Values represent distance in meters (from ORIGO = center-of-earth).
+
+    Args:
+        raw_data (str): MQTT data in JSON format.
+
+    Returns:
+        tuple: timestamp(from data) and XYZ-values (scaled down w. a factor=1:100000).
+    """
+    json_data = json.loads(raw_data)
+    # Get timestamp:
+    t_stamp = json_data["timestamp"]
+    # Get coordinates:
+    position_data = json_data["position"]
+    # Extract position's XYZ-coordinates:
+    x_val = float(position_data["x"]) / 100000
+    y_val = float(position_data["y"]) / 100000
+    z_val = float(position_data["z"]) / 100000
+    #
+    return t_stamp, x_val, y_val, z_val
+
+
+def get_position(raw_data: str) -> tuple:
+    """
+    Get GEOPOS-value from MQTT data, i.e. timestamped lat/lon/alt value.
+
+    Args:
+        raw_data (str): MQTT data in JSON format.
+
+    Returns:
+        tuple: timestamp + GEOPOS-value(lat,lon,alt).
+    """
+    json_data = json.loads(raw_data)
+    # Get timestamp:
+    t_stamp = json_data["timestamp"]
+    # Get coordinates:
+    position_data = json_data["position"]
+    # Extract position's XYZ-coordinates:
+    lat_val = get_value_from_json(position_data, "lat") 
+    lon_val = get_value_from_json(position_data, "lon") 
+    alt_val = get_value_from_json(position_data, "alt") 
+    #
+    return t_stamp, lat_val, lon_val, alt_val
 
 
 def mqtt_setup(broker_address: str, broker_port: int, topic: str, msg_event_handler: object=None, conn_event_handler: object=None) -> mqtt.Client:
@@ -133,13 +207,15 @@ def on_message(client, userdata, msg):
         pass
     #
     data = msg.payload.decode("utf-8")
-    sine_val = get_value_from_raw(data)
-    print(f"Received data for sample-count {sample_counter}: {data}")
+    if DATA_STREAM_DEBUG:
+        print(f"Received data for sample-count {sample_counter}: {data}")
+    #
+    time_stamp, lat, lon, alt = get_position(data)
     #
     sample_counter += 1
     #
-    xs.append(sample_counter)
-    ys.append(sine_val)
+    xs.append(lon)
+    ys.append(lat)
 
 
 # Create a MQTT client and connect to the broker

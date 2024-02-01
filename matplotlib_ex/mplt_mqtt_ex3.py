@@ -29,7 +29,7 @@ The position/velocity data is in the following JSON format:
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
-import random
+
 
 import paho.mqtt.client as mqtt
 import json

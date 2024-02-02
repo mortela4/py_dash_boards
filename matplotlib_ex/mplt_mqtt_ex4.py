@@ -35,7 +35,9 @@ from mpl_toolkits.mplot3d import Axes3D         # For 3D-plot.
 
 import paho.mqtt.client as mqtt
 import json
+from math import sin, cos 
 
+EARTH_RADIUS_KM = 6371         # Earth's radius in [km].
 
 # Define the MQTT broker details
 broker_address = "test.mosquitto.org"
@@ -125,10 +127,20 @@ def get_position(raw_data: str) -> tuple:
     lon_val = get_value_from_json(position_data, "lon") 
     alt_val = get_value_from_json(position_data, "alt") / 1000    # Value is in meters, but we want [km] (altitude is varying very little)
     # Process longitude - discontinuity at the meridian line (=Greenwich):
+    """
     if 0 > lon_val:
-        lon_val = -lon_val                      # NOTE: this makes value-range 0-180 degrees instead of -180 to +180!!
+        lon_val = -lon_val                      # NOTE: this makes value-range 0-180 degrees instead of -180 to +180!! (but continuos across 0-meridian)
+    """
     #  
     return t_stamp, lat_val, lon_val, alt_val
+
+
+def get_3d_vector(lat: float, lon: float, alt: float, radius: float=EARTH_RADIUS_KM) -> tuple:
+    x = radius * cos(lat) * cos(lon)
+    y = radius * cos(lat) * sin(lon)
+    z = radius * sin(lat)
+    #
+    return x, y, z
 
 
 def mqtt_setup(broker_address: str, broker_port: int, topic: str, msg_event_handler: object=None, conn_event_handler: object=None) -> mqtt.Client:
@@ -221,14 +233,16 @@ def on_message(client, userdata, msg):
     data = msg.payload.decode("utf-8")
     if DATA_STREAM_DEBUG:
         print(f"Received data for sample-count {sample_counter}: {data}")
-    #
+    # Get GEOPOS-data:
     time_stamp, lat, lon, alt = get_position(data)
+    # Convert to 3D-coordinates:
+    x, y, z = get_3d_vector(lat, lon, alt)
     #
     sample_counter += 1
     #
-    xs.append(lon)
-    ys.append(lat)
-    zs.append(alt)
+    xs.append(x)
+    ys.append(y)
+    zs.append(z)
 
 
 # Create a MQTT client and connect to the broker

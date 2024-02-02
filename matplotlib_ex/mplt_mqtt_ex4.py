@@ -136,9 +136,23 @@ def get_position(raw_data: str) -> tuple:
 
 
 def get_3d_vector(lat: float, lon: float, alt: float, radius: float=EARTH_RADIUS_KM) -> tuple:
+    """
+    Calculate carthesian 3D-coordinates(x,y,z) from GEO-position (lat, lon, alt).
+    NOTE: no elliptic globe-approximation (i.e. WGS-24 projection)!
+    Length of vector is always: l = sqrt(x^2 + y^2 + z^2) = radius + altitude 
+
+    Args:
+        lat (float): latitude (in degrees)
+        lon (float): longitude (in degrees)
+        alt (float): altitude (in kilometres)
+        radius (float, optional): XYZ-vector length. Defaults to EARTH_RADIUS_KM.
+
+    Returns:
+        tuple: 3D-vector XYZ-values as tuple.
+    """
     x = radius * cos(lat) * cos(lon)
     y = radius * cos(lat) * sin(lon)
-    z = radius * sin(lat)
+    z = ( radius + alt ) * sin(lat)      # NOTE: imperative that 'radius' and 'alt' are both given in [km]!!
     #
     return x, y, z
 

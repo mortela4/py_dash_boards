@@ -259,29 +259,12 @@ def on_message(client, userdata, msg):
     # Update plot:
     ax1.clear()
     ax1.plot(xs, ys, zs)
-    ax1.redraw_in_frame()
+    # ax1.redraw_in_frame()     <-- NOTE: redundant! Unless xyz-axis MIN/MAX-values has been established upon plot creation, and dynamic re-scaling is NOT required!!
 
 
 # Create a MQTT client and connect to the broker
 mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port, topic=topic, msg_event_handler=on_message)
 
-"""
-def animate(i):
-    global xs, ys, sample_counter, sample_counter_prev
-    #
-    if DATA_STREAM_DEBUG and 0 != i and 0 == i % 10:
-        print(f"Update {i} ...")
-    #
-    if sample_counter != sample_counter_prev:
-        ax1.clear()
-        ax1.plot(xs, ys, zs)
-        sample_counter_prev = sample_counter
-    else:
-        if DATA_STREAM_DEBUG:
-            print("No new data ...")
-        else:
-            pass
-"""
 
 def update_plot(i):
     """ Dummy callback - only to update display """

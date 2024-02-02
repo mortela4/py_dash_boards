@@ -46,7 +46,7 @@ topic = "Satellite/Iss"
 UPDATE_INTERVAL_MS = 500    # 500 ms update-interval, i.e. 0.5 sec.
 
 # Debug:
-DATA_STREAM_DEBUG = True
+DATA_STREAM_DEBUG = False
  
 # style.use('fivethirtyeight')      # Optional ...
 
@@ -123,8 +123,11 @@ def get_position(raw_data: str) -> tuple:
     # Extract position's XYZ-coordinates:
     lat_val = get_value_from_json(position_data, "lat") 
     lon_val = get_value_from_json(position_data, "lon") 
-    alt_val = get_value_from_json(position_data, "alt") 
-    #
+    alt_val = get_value_from_json(position_data, "alt") / 1000    # Value is in meters, but we want [km] (altitude is varying very little)
+    # Process longitude - discontinuity at the meridian line (=Greenwich):
+    if 0 > lon_val:
+        lon_val = -lon_val                      # NOTE: this makes value-range 0-180 degrees instead of -180 to +180!!
+    #  
     return t_stamp, lat_val, lon_val, alt_val
 
 
@@ -235,7 +238,7 @@ mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port,
 def animate(i):
     global xs, ys, sample_counter, sample_counter_prev
     #
-    if 0 != i and 0 == i % 10:
+    if DATA_STREAM_DEBUG and 0 != i and 0 == i % 10:
         print(f"Update {i} ...")
     #
     if sample_counter != sample_counter_prev:

@@ -1,8 +1,8 @@
 """
-@file mplt_mqtt_ex5.py
+@file mplt_mqtt_ex6.py
 
 @brief Graphing ISS spaceship's position and velocity data w. Matplotlib.
-Position is shown in 3D-map.
+Position is shown in 3D-map. Update is *FORCED* in 'on_message' callback.
 The position/velocity data is in the following JSON format:
 {
     "name":"ISS (ZARYA)",
@@ -222,7 +222,6 @@ xs = []
 ys = []
 zs = []
 sample_counter = 0
-sample_counter_prev = 0
 
 fig = plt.figure()
 fig.add_subplot(111, projection="3d")
@@ -259,17 +258,13 @@ def on_message(client, userdata, msg):
     # Update plot:
     ax1.clear()
     ax1.plot(xs, ys, zs)
+    # ax1.redraw_in_frame()     <-- NOTE: redundant! Unless xyz-axis MIN/MAX-values has been established upon plot creation, and dynamic re-scaling is NOT required!!
+    fig.canvas.draw()           # Forced UPDATE of plot!
+    fig.canvas.flush_events()
 
 
 # Create a MQTT client and connect to the broker
 mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port, topic=topic, msg_event_handler=on_message)
-
-
-def update_plot(i):
-    """ Dummy callback - only to update display """
-    pass
-
-_ = animation.FuncAnimation(fig, update_plot, interval=UPDATE_INTERVAL_MS)    # NOTE: 'animation'-object is NOT used elsewhere, i.e. does NOT need a name!
 
 # Start the MQTT client loop
 mqtt_client.loop_start()

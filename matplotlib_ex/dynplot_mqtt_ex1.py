@@ -2,6 +2,8 @@
 @file dynplot_mqtt_ex1.py
 
 @brief Graphing ISS spaceship's position and velocity data w. Matplotlib/'dynplot'.
+@ref https://github.com/lorenzschmid/dynplot
+
 Position is shown in 3D-map. Update is *FORCED* in 'on_message' callback.
 The position/velocity data is in the following JSON format:
 {

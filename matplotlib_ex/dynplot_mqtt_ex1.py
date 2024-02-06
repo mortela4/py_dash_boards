@@ -222,8 +222,8 @@ ys = []
 zs = []
 sample_counter = 0
 
-#fig = plt.figure()
 dplt = dynplot()
+#fig = dplt.figure()
 #fig.add_subplot(111, projection="3d")
 #
 #ax1 = fig.gca()
@@ -235,7 +235,7 @@ dplt = dynplot()
 
 def on_message(client, userdata, msg):
     #
-    global dplt, sample_counter, xs, ys, zs
+    global sample_counter, xs, ys, zs
     #
     if client:
         pass
@@ -258,11 +258,11 @@ def on_message(client, userdata, msg):
     # Update plot:
     #ax1.clear()
     #ax1.plot(xs, ys, zs)
-    dplt.plot(xs, ys)
+    #dplt.plot(xs, ys)
     # ax1.redraw_in_frame()     <-- NOTE: redundant! Unless xyz-axis MIN/MAX-values has been established upon plot creation, and dynamic re-scaling is NOT required!!
     #fig.canvas.draw()           # Forced UPDATE of plot!
     #fig.canvas.flush_events()
-    dplt.show()
+    #dplt.show()
 
 
 # Create a MQTT client and connect to the broker
@@ -271,14 +271,21 @@ mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port,
 # Start the MQTT client loop
 mqtt_client.loop_start()
 
+#dplt.plot(xs, ys)
+_ = dplt.ax.set_title('ISS spaceship trajectory')
 # Then show plot:
-dplt.show()
+#dplt.show()
 
 import time
 
+sample_counter_prev = 0
+#
 for _ in range(100):
-    time.sleep(1)
-
-
-
-
+    if sample_counter_prev != sample_counter:
+        sample_counter_prev = sample_counter
+        dplt.plot(xs, ys)
+        dplt.show()
+    else:
+        time.sleep(1)
+ 
+print("DONE ...")

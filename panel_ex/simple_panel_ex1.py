@@ -19,14 +19,19 @@ pn.extension(design='material')
 csv_file = ("https://raw.githubusercontent.com/holoviz/panel/main/examples/assets/occupancy.csv")
 data = pd.read_csv(csv_file, parse_dates=["date"], index_col="date")
 #console.log("Downloaded data")
-df = pn.dataframe.DataFrame(data)
+df = pn.widgets.DataFrame(data, name="DataFrame from Panda's 'read_csv()'.")
 
+df.show()
+
+"""
 # Panel Widgets
 variable_widget = pn.widgets.Select(name="variable", value="Temperature", options=list(data.columns))
 window_widget = pn.widgets.IntSlider(name="window", value=30, start=1, end=60)
 sigma_widget = pn.widgets.IntSlider(name="sigma", value=10, start=0, end=20)
 #console.log("Set up widgets!")
+"""
 
+"""
 # Interactive hvplot pipeline
 ## Compute the outliers
 data = df.interactive()
@@ -52,3 +57,4 @@ count = outliers.pipe(
 # Servable App
 dash_board = pn.Column(pipeline.widgets(), pn.Row(count.output(), pipeline.output())).servable(target='panel')
 dash_board.show()
+"""

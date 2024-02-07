@@ -5,7 +5,7 @@
 """
 
 import panel as pn
-#import hvplot.pandas
+import hvplot.pandas
 import pandas as pd
 import numpy as np
 """

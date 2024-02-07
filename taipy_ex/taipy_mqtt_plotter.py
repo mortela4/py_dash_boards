@@ -129,7 +129,6 @@ def on_message(client, userdata, msg):
     current_sample = sine_val
 
 
-
 def new_data_received() -> bool:
     global current_sample_count
     global prev_sample_count
@@ -144,7 +143,13 @@ def new_data_received() -> bool:
 
 # ************************************************************************************
 
+# ************************** MQTT Setup ******************************************
+mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port, topic=topic, msg_event_handler=on_message)
+# Start MQTT-client thread:
+mqtt_client.loop_start()
+# ********************************************************************************
 
+# **************************** GUI stuff *****************************************
 line_data = pd.DataFrame({"Time": [], "Value": []})
 
 layout_line = {

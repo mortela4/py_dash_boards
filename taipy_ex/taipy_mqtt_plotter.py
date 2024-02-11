@@ -112,7 +112,7 @@ def mqtt_setup(broker_address: str, broker_port: int, topic: str, msg_event_hand
 
 def on_message(client, userdata, msg):
     #
-    global sample_counter, current_sample
+    global current_sample_count, current_sample
     #
     if client:
         pass
@@ -122,9 +122,9 @@ def on_message(client, userdata, msg):
     #
     data = msg.payload.decode("utf-8")
     sine_val = get_value_from_raw(data)
-    print(f"Received data for sample-count {sample_counter}: {data}")
+    print(f"Received data for sample-count {current_sample_count}: {data}")
     #
-    sample_counter += 1
+    current_sample_count += 1
     #
     current_sample = sine_val
 
@@ -215,10 +215,7 @@ def update_value(new_sample: float):
 
 # Set up GUI(='page'):
 page = """
-<|part|class_name=card|
-<|{line_data[-30:]}|chart|type=lines|x=Time|y=Value|layout={layout_line}|height=40vh|>
-|>
-|>
+<|part|class_name=card|<|{line_data[-30:]}|chart|type=lines|x=Time|y=Value|layout={layout_line}|height=40vh|>|>
 """
 gui = Gui(page=page)
 

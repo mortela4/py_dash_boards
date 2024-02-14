@@ -122,7 +122,8 @@ def on_message(client, userdata, msg):
     #
     data = msg.payload.decode("utf-8")
     sine_val = get_value_from_raw(data)
-    print(f"Received data for sample-count {sample_counter}: {data}")
+    if DATA_STREAM_DEBUG:
+        print(f"Received data for sample-count {sample_counter}: {data}")
     #
     sample_counter += 1
     #
@@ -130,7 +131,8 @@ def on_message(client, userdata, msg):
     #
     df.loc[len(df)] = [sample_counter, sine_val]         # Append data.
     #
-    print(f"DataFrame length is now = {len(df)}")
+    if DATA_STREAM_DEBUG:
+        print(f"DataFrame length is now = {len(df)}")
 
 
 
@@ -148,6 +150,12 @@ line_chart = df.hvplot.line(x="sampleno", y="sineval")
 
 # Create a Panel dashboard
 dashboard = pn.Column(line_chart)
+
+def update_chart() -> None:
+    pass
+
+# Define the periodic callback to update the chart
+pn.state.add_periodic_callback(update_chart, UPDATE_INTERVAL_MS)
 
 # Display the dashboard
 dashboard.show()

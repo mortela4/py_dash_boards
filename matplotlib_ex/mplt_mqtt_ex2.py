@@ -77,10 +77,9 @@ def mqtt_setup(broker_address: str, broker_port: int, topic: str, msg_event_hand
         data = msg.payload.decode("utf-8")
         print(f"Received data: {data}")
     #
-    def default_connect_handler(client, userdata, flags, rc: int=0):
+    def default_connect_handler(client, userdata, flags, rc: int=0, props: any=None):
         if client:
             pass
-        #
         if userdata:
             pass
         #
@@ -91,9 +90,12 @@ def mqtt_setup(broker_address: str, broker_port: int, topic: str, msg_event_hand
             print("Connected to MQTT Broker!")
         else:
             print("ERROR: failed to connect, return code %d\n", rc)    
+        #
+        if props:
+            pass
 
     # Create an MQTT client and connect to the broker
-    client = mqtt.Client()
+    client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     client.connect(broker_address, broker_port)
     # Subscribe to the MQTT topic
     client.subscribe(topic)

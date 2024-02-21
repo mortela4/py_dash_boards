@@ -112,8 +112,8 @@ def mqtt_setup(broker_address: str, broker_port: int, topic: str, msg_event_hand
 
 # DATA setup:
 sample_counter = 0
-x_val = []
-sine_val = []
+x_val = [i for i in range(500)]
+sine_val = [0]*500
 
 source = ColumnDataSource({"x": x_val, "y": sine_val})
 p = figure()
@@ -125,7 +125,7 @@ bokeh_pane.servable()
 # MQTT message callback
 def on_message(client, userdata, msg):
     #
-    global sample_counter, x_val, sine_val, source
+    global sample_counter, sine_val
     #
     if client:
         pass
@@ -140,22 +140,34 @@ def on_message(client, userdata, msg):
     #
     sample_counter += 1
     #
-    x_val.append(sample_counter)         # Append data.
-    sine_val.append(sine_value)
+    #x_val.append(sample_counter)         # Append data.
+    #sine_val.append(sine_value)
+    sine_val[sample_counter] = sine_value
+    print(f"sine_val = {sine_val[(sample_counter - 5):(sample_counter+5)]}")
     #
-    source.data.update({"x": x_val, "y": sine_val})
-    if USE_NOTEBOOK:
-        bokeh_pane.param.trigger('object') # Only needed in notebook
+    # PASS ...
     #
     if DATA_STREAM_DEBUG:
         print(f"DataFrame length is now = {len(sine_val)}")
 
+
+def update_chart():
+    global sine_val
+    #
+    source.data.update({"y": sine_val})
+    bokeh_pane.param.trigger('object')
+    if USE_NOTEBOOK:
+        bokeh_pane.param.trigger('object') # Only needed in notebook
+    else:
+        print("Updated ...")
 
 # Create a MQTT client and connect to the broker
 mqtt_client = mqtt_setup(broker_address=broker_address, broker_port=broker_port, topic=topic, msg_event_handler=on_message)
 
 # Start the MQTT loop
 mqtt_client.loop_start()
+    
+pn.state.add_periodic_callback(update_chart, UPDATE_INTERVAL_MS)
 
 # Create line chart
 bokeh_pane = pn.pane.Bokeh(p)
